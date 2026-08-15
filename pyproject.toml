@@ -1,0 +1,29 @@
+[project]
+name = "xyz2ob"
+version = "1.0.0"
+description = "小宇宙播客链接 -> 文字稿 -> AI 结构化笔记 -> Obsidian"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27",
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+]
+
+[project.optional-dependencies]
+# 本地语音转录兜底（Apple Silicon）
+asr = [
+    "mlx-whisper>=0.4.0",
+]
+
+[project.scripts]
+pod = "xyz2ob.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["xyz2ob"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"xyz2ob/static" = "xyz2ob/static"

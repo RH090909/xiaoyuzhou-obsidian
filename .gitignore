@@ -1,0 +1,24 @@
+# 私密配置（含 API Key），绝不入库
+.env
+.env.local
+*.env
+!.env.example
+
+# 小宇宙登录 token（实际存放在 ~/.xyz2ob/，这里再兜一层）
+*token*.json
+.xyz2ob/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+uv.lock
+
+# macOS
+.DS_Store
+.backup-*/
