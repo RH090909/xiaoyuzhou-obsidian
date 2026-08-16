@@ -280,6 +280,35 @@ check(
 )
 uniq_note.unlink()
 
+# EXTRA_SCAN_DIRS：额外目录也要参与查重，两种文件格式都要认
+extra_notes = tmp / "04 English"
+extra_notes.mkdir(parents=True, exist_ok=True)
+(extra_notes / "长期积累.md").write_text(
+    "# 表达清单\n\n## loop you in\n\n把你也拉进来同步。\n\n## 1. 这是场景小标题\n\n## 目录总结\n",
+    encoding="utf-8",
+)
+extra_dir2 = tmp / "03 KNOWLEDGE" / "Videos"
+extra_dir2.mkdir(parents=True, exist_ok=True)
+(extra_dir2 / "001 视频笔记.md").write_text(
+    "## 要点展开\n\n### 不该被收的小标题\n\n## 优秀表达沉淀\n\n### 1. 视频里的表达\n",
+    encoding="utf-8",
+)
+known_extra = vault.collect_known_expressions(
+    tmp, notes, extra_dirs=("04 English", "03 KNOWLEDGE/Videos")
+)
+check("额外目录里的词条型表达能收到", "loop you in" in known_extra, str(known_extra))
+check("额外目录里的笔记型表达能收到", "视频里的表达" in known_extra, str(known_extra))
+check("词条型文件里的场景小标题不会被当成表达", "这是场景小标题" not in known_extra)
+check("额外目录里的要点小标题不会被当成表达", "不该被收的小标题" not in known_extra)
+check(
+    "不配置额外目录时不会扫到那些目录",
+    "loop you in" not in vault.collect_known_expressions(tmp, notes),
+)
+check(
+    "额外目录填空字符串不会报错",
+    isinstance(vault.collect_known_expressions(tmp, notes, extra_dirs=("", "  ")), list),
+)
+
 # 表达兜底校验：文字稿里查不到的表达要被剔掉
 fake_transcript = "[00:01:00] 你得先把周期缩短，别一上来就谈星辰大海，go do it jump。\n" * 3
 verified = _verify_expressions(

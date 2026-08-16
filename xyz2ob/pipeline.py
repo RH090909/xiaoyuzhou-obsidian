@@ -154,7 +154,10 @@ def run(
     # --force 重跑同一集时，这一集自己的旧笔记不算「历史积累」——
     # 否则模型会被要求避开本集最好的那几条表达，越重跑越差。
     known = vault.collect_known_expressions(
-        cfg.vault_path, cfg.notes_dir, exclude=existing if force else None
+        cfg.vault_path,
+        cfg.notes_dir,
+        exclude=existing if force else None,
+        extra_dirs=cfg.extra_scan_dirs,
     )
     if known:
         on_log(f"已积累 {len(known)} 条表达，本次会避开重复。")

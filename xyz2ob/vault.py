@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 
@@ -20,7 +21,7 @@ _EID_IN_FM_RE = re.compile(r"^eid:\s*([0-9a-fA-F]{24})\s*$", re.M)
 _EXPR_HEADING_RE = re.compile(r"^###\s*(?:\d+[.、]\s*)?(.+?)\s*$", re.M)
 # 「优秀表达沉淀 / 优秀表达提炼 / 值得学习的英文表达」这类小节标题
 _EXPR_SECTION_RE = re.compile(r"^##\s+.*表达.*$", re.M)
-# 04 ENGLISH 积累文件里，每条表达自己就是一个 ## 标题
+# 词条式积累文件（整篇就是一个表达清单）里，每条表达自己就是一个 ## 标题
 _H2_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
 _ALL_NOTES_HEADING = "## 全部笔记（按时间）"
 # 小节里的占位行，如 _(暂无)_ / _(新增笔记时在此追加：…)_，有真实条目后就该消失
@@ -94,20 +95,34 @@ def find_existing(notes_dir: Path, eid: str) -> Path | None:
 
 
 def collect_known_expressions(
-    vault_path: Path, notes_dir: Path, exclude: Path | None = None
+    vault_path: Path,
+    notes_dir: Path,
+    exclude: Path | None = None,
+    extra_dirs: Sequence[str] = (),
 ) -> list[str]:
     """收集知识库里已积累过的表达，喂给模型做查重。
 
-    覆盖范围（对应 _Rule.md 第 4 节）：本文件夹 + 同级 Youtube/ + 04 ENGLISH/。
+    覆盖范围：笔记目录本身，加上 `EXTRA_SCAN_DIRS` 里配置的其他目录
+    （相对 vault 根目录，比如另一个笔记目录，或一份长期维护的表达清单）。
 
-    只在「…表达…」小节内部取条目，避免把「要点展开」的小标题误当成表达；
-    `04 ENGLISH/` 里每条表达本身就是一个 `##` 标题，单独处理。
+    两种文件格式都能认：
+    - 笔记型：只在「…表达…」小节内部取 `###` 条目，避免把「要点展开」的小标题误当成表达；
+    - 词条型：整篇没有「表达」小节时，退化为把每个 `##` 标题当作一条表达。
 
     exclude：--force 重跑某一集时传入这一集自己的旧笔记，把它排除在「历史积累」之外。
     """
-    english_dir = vault_path / "04 ENGLISH"
+    scan_dirs: list[Path] = [notes_dir]
+    for raw in extra_dirs:
+        rel = raw.strip().strip("/")
+        if rel:
+            scan_dirs.append(vault_path / rel)
+
     sources: list[Path] = []
-    for d in (notes_dir, notes_dir.parent / "Youtube", english_dir):
+    seen_dirs: set[Path] = set()
+    for d in scan_dirs:
+        if d in seen_dirs:
+            continue
+        seen_dirs.add(d)
         if d.exists() and d.is_dir():
             sources.extend(sorted(d.glob("*.md")))
 
@@ -134,19 +149,21 @@ def collect_known_expressions(
             text = p.read_text(encoding="utf-8")
         except OSError:
             continue
-        if english_dir in p.parents:
-            for m in _H2_RE.finditer(text):
-                heading = m.group(1).strip()
-                # 跳过「1. 开场闲聊」这类场景小标题和结构性标题
-                if re.match(r"^\d", heading) or any(
-                    k in heading for k in ("总结", "规则", "索引", "目录")
-                ):
-                    continue
-                add(heading)
+        sections = _expr_sections(text)
+        if sections:
+            for section in sections:
+                for m in _EXPR_HEADING_RE.finditer(section):
+                    add(m.group(1))
             continue
-        for section in _expr_sections(text):
-            for m in _EXPR_HEADING_RE.finditer(section):
-                add(m.group(1))
+        # 词条型清单：整篇就是表达，每条一个 ## 标题
+        for m in _H2_RE.finditer(text):
+            heading = m.group(1).strip()
+            # 跳过「1. 开场闲聊」这类场景小标题和结构性标题
+            if re.match(r"^\d", heading) or any(
+                k in heading for k in ("总结", "规则", "索引", "目录")
+            ):
+                continue
+            add(heading)
     return known
 
 

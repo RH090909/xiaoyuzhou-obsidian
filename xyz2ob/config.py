@@ -46,6 +46,8 @@ class Config:
     asr_model: str
     max_chars_single_pass: int
     request_timeout: float
+    # 除笔记目录外，还要扫哪些目录做表达查重（相对 vault 根目录，逗号分隔）
+    extra_scan_dirs: tuple[str, ...] = ()
 
     @property
     def notes_dir(self) -> Path:
@@ -98,4 +100,7 @@ def load_config(
         asr_model=pick("ASR_MODEL", "mlx-community/whisper-large-v3-turbo"),
         max_chars_single_pass=int(pick("MAX_CHARS_SINGLE_PASS", "20000")),
         request_timeout=float(pick("REQUEST_TIMEOUT", "300")),
+        extra_scan_dirs=tuple(
+            d.strip() for d in pick("EXTRA_SCAN_DIRS").split(",") if d.strip()
+        ),
     )
