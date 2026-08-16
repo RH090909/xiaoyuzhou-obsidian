@@ -2,6 +2,7 @@
 .env
 .env.local
 *.env
+.env.*
 !.env.example
 
 # 小宇宙登录 token（实际存放在 ~/.xyz2ob/，这里再兜一层）
