@@ -287,14 +287,14 @@ extra_notes.mkdir(parents=True, exist_ok=True)
     "# 表达清单\n\n## loop you in\n\n把你也拉进来同步。\n\n## 1. 这是场景小标题\n\n## 目录总结\n",
     encoding="utf-8",
 )
-extra_dir2 = tmp / "03 KNOWLEDGE" / "Videos"
+extra_dir2 = tmp / "03 RESOURCES" / "Videos"
 extra_dir2.mkdir(parents=True, exist_ok=True)
 (extra_dir2 / "001 视频笔记.md").write_text(
     "## 要点展开\n\n### 不该被收的小标题\n\n## 优秀表达沉淀\n\n### 1. 视频里的表达\n",
     encoding="utf-8",
 )
 known_extra = vault.collect_known_expressions(
-    tmp, notes, extra_dirs=("04 English", "03 KNOWLEDGE/Videos")
+    tmp, notes, extra_dirs=("04 English", "03 RESOURCES/Videos")
 )
 check("额外目录里的词条型表达能收到", "loop you in" in known_extra, str(known_extra))
 check("额外目录里的笔记型表达能收到", "视频里的表达" in known_extra, str(known_extra))

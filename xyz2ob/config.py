@@ -18,7 +18,7 @@ STATE_DIR = Path(
     os.environ.get("XYZ2OB_STATE_DIR") or str(Path.home() / ".xyz2ob")
 )
 
-DEFAULT_VAULT_SUBDIR = "03 KNOWLEDGE/Podcasts"
+DEFAULT_VAULT_SUBDIR = "03 RESOURCES/Podcasts"
 
 
 def _load_dotenv(path: Path) -> dict[str, str]:
